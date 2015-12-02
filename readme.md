@@ -203,6 +203,8 @@ Where puppet looks for puppet modules
 Stored in the `<module>/files` dir
 Files are referenced like `puppet:///modules/<module>/motd`
 
+Instead of supplying `source`, you can supply `content` and set the contents of the file to a string literal or variable.
+
 
 ##Packages
 ###Do NOT use ensure => latest
@@ -300,9 +302,23 @@ file { '/etc/motd':
 	owner => $user,}
 ```
 
+##Debugging with notify
+Use notify to print to stdout during a run `notify {"fqdn = <${::fqdn}>":}`
 
-##Debigging with notify
-Use this to print to stdout during a run `notify {"fqdn = <${::fqdn}>":}`
+
+##Defines
+You can define your own types like
+
+```
+#<module>/manifests/log.pp
+define debugger::log (
+    $msg = ''
+) {
+    notify {"Message: ${msg}":}
+}
+
+```
 
 ##Forge
 A [place](https://forge.puppetlabs.com/) to find puppet modules. Use with caution. Some of them are shit or configured in weird ways.
+
