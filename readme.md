@@ -319,6 +319,100 @@ define debugger::log (
 
 ```
 
+
+##Conditionals
+###Selector
+Works like a switch statement that evals and sets a var. Here we're setting the `$notes` var switching off the role fact. Kind of like rust's match or ruby's expressive case statement.
+
+```
+$notes = $::role ? {
+	'puppetmaster' => 'Puppet Master',
+	'webserver' => 'Web Server',
+	default => 'some node',
+}
+```
+
+###Case
+```
+case $::role { 'puppetmaster': {	$msg = 'Puppet Master' }	'webserver': {	$msg = 'Web Server'} default: {	fail('I am only meant to work on puppetmasters and webserver }}
+```
+
+###Regex
+One match is anything that starts with "web"
+
+```
+case $::role {
+	'varnish': {
+	  $msg = 'cache_server'
+	}
+	'nginx':  {
+	  $msg = 'app_server'
+	}
+	/^web/: {
+	  $msg = 'web something'
+	}
+	default: {
+	  fail('Can only run on cache_server and app_server and web_* boxes')
+	}
+}
+```
+
+###If-Else
+```
+if $::role == 'puppetmaster' { 
+	$msg = 'Puppet Master'} else {	$msg = 'Not Puppet Master'}
+```
+
+##Parameterized classes
+###NeW iN PuPpEt 3!
+Allow the ability to look up data outside of the class and inject it into the class
+
+```
+ class foo (	$param = 'default value',){ ...}
+```
+
+##Hiera
+Hierarchical data store with pluggable backends
+
+- MySQL
+- eyaml (yaml encrypted with gpg!)
+- JSON
+- REST
+- LDAP
+- postgres
+- etc.
+
+```
+# /var/lib/hiera/hiera.yaml--- 
+:backends:	- yaml 
+:hierarchy:	- fqdn/%{fqdn}	- roles/%{role}	- environments/%{environment}	- osfamily/%{osfamily}-%{lsbmajdistrelease} - osfamily/%{osfamily}	- common:yaml: :datadir:
+```
+
+Then include some classes from hiera
+
+```
+# /etc/puppet/manifests/site.p# include classes from hierahiera_include('classes')
+
+```
+
+```
+--- 
+classes:	- motd
+```
+
+##Exec
+Runs commands
+
+```
+exec { 'build_raid_device':	command => 'build_raid.sh',	path => '/bin:/usr/bin:/usr/local/bin',}
+```
+
+But make sure they are idempotent
+
+```
+exec { 'build_raid_device':	command => 'build_raid.sh',	unless => 'raid_status | grep ^OK',	path => '/bin:/usr/bin:/usr/local/bin',}
+```
+
 ##Forge
 A [place](https://forge.puppetlabs.com/) to find puppet modules. Use with caution. Some of them are shit or configured in weird ways.
 
